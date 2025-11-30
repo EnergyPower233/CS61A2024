@@ -10,7 +10,7 @@ import scheme_forms
 # Eval/Apply #
 ##############
 
-def scheme_eval(expr, env, _=None): # Optional third argument is ignored
+def scheme_eval(expr, env, tail=False): # Optional third argument is ignored
     """Evaluate Scheme expression EXPR in Frame ENV.
 
     >>> expr = read_line('(+ 2 2)')
@@ -30,13 +30,13 @@ def scheme_eval(expr, env, _=None): # Optional third argument is ignored
         raise SchemeError('malformed list: {0}'.format(repl_str(expr)))
     first, rest = expr.first, expr.rest #first一定是操作
     if scheme_symbolp(first) and first in scheme_forms.SPECIAL_FORMS:
-        return scheme_forms.SPECIAL_FORMS[first](rest, env)
+        return scheme_forms.SPECIAL_FORMS[first](rest, env,tail)
     else:
         # BEGIN PROBLEM 3
         "*** YOUR CODE HERE ***"
         # def single_scheme_eval(expr):
         #     return scheme_eval(expr, env)
-        return scheme_apply(scheme_eval(first, env), rest.map(lambda x: scheme_eval(x, env)), env)
+        return complete_apply(scheme_eval(first, env), rest.map(lambda x: scheme_eval(x, env)), env)
         # END PROBLEM 3
 
 def scheme_apply(procedure, args, env):
@@ -74,18 +74,18 @@ def scheme_apply(procedure, args, env):
         # BEGIN PROBLEM 9
         #Accepted
         "*** YOUR CODE HERE ***"
-        return eval_all(procedure.body, procedure.env.make_child_frame(procedure.formals, args))     
+        return eval_all(procedure.body, procedure.env.make_child_frame(procedure.formals, args), tail = True)     
         # END PROBLEM 9
     elif isinstance(procedure, MuProcedure):
         # BEGIN PROBLEM 11
         "*** YOUR CODE HERE ***"
-        return eval_all(procedure.body, env.make_child_frame(procedure.formals, args))
+        return eval_all(procedure.body, env.make_child_frame(procedure.formals, args), tail = True)
         #不能直接ENV 不然你函数的参没了
         # END PROBLEM 11
     else:
         assert False, "Unexpected procedure: {}".format(procedure)
 
-def eval_all(expressions, env):
+def eval_all(expressions, env, tail=False):
     """Evaluate each expression in the Scheme list EXPRESSIONS in
     Frame ENV (the current environment) and return the value of the last.
 
@@ -102,15 +102,15 @@ def eval_all(expressions, env):
     """
     #Accepted
     # BEGIN PROBLEM 6
-    def evaluate_all(expressions, env):
+    def evaluate_all(expressions, env, tail=False):
         if expressions is nil:
             return
         if expressions.rest == nil:
-            return scheme_eval(expressions.first, env)
+            return scheme_eval(expressions.first, env, tail)
         else:
             scheme_eval(expressions.first, env)
-            return evaluate_all(expressions.rest, env)
-    return evaluate_all(expressions, env) # replace this with lines of your own code
+            return evaluate_all(expressions.rest, env, tail)
+    return evaluate_all(expressions, env, tail) # replace this with lines of your own code
     # END PROBLEM 6
 
 
@@ -144,14 +144,10 @@ def optimize_tail_calls(unoptimized_scheme_eval):
         if tail and not scheme_symbolp(expr) and not self_evaluating(expr):
             return Unevaluated(expr, env)
 
-        result = Unevaluated(expr, env)
-        # BEGIN OPTIONAL PROBLEM 1
-        "*** YOUR CODE HERE ***"
-        #尽力了 写不明白 求调
+        result = unoptimized_scheme_eval(expr, env)
         while isinstance(result, Unevaluated):
             result = unoptimized_scheme_eval(result.expr, result.env)
         return result
-        # END OPTIONAL PROBLEM 1
     return optimized_eval
 
 

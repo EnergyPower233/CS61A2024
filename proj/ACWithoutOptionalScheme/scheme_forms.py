@@ -12,7 +12,7 @@ from scheme_builtins import *
 # initial identifying symbol (if, lambda, quote, ...). Its second argument is
 # the environment in which the form is to be evaluated.
 
-def do_define_form(expressions, env):
+def do_define_form(expressions, env, tail):
     """Evaluate a define form.
     >>> env = create_global_frame()
     >>> do_define_form(read_line("(x 2)"), env) # evaluating (define x 2)
@@ -54,7 +54,7 @@ def do_define_form(expressions, env):
         bad_signature = signature.first if isinstance(signature, Pair) else signature
         raise SchemeError('non-symbol: {0}'.format(bad_signature))
 
-def do_quote_form(expressions, env):
+def do_quote_form(expressions, env, tail = False):
     """Evaluate a quote form.
 
     >>> env = create_global_frame()
@@ -70,7 +70,7 @@ def do_quote_form(expressions, env):
     #expr is a list which rest element is 'nil'
     # END PROBLEM 5
 
-def do_begin_form(expressions, env):
+def do_begin_form(expressions, env, tail):
     """Evaluate a begin form.
 
     >>> env = create_global_frame()
@@ -80,9 +80,9 @@ def do_begin_form(expressions, env):
     3
     """
     validate_form(expressions, 1)
-    return eval_all(expressions, env)
+    return eval_all(expressions, env, tail)
 
-def do_lambda_form(expressions, env):
+def do_lambda_form(expressions, env, tail = False):
     """Evaluate a lambda form.
 
     >>> env = create_global_frame()
@@ -98,7 +98,7 @@ def do_lambda_form(expressions, env):
     return LambdaProcedure(formals, expressions.rest, env)
     # END PROBLEM 7
 
-def do_if_form(expressions, env):
+def do_if_form(expressions, env, tail):
     """Evaluate an if form.
 
     >>> env = create_global_frame()
@@ -109,11 +109,11 @@ def do_if_form(expressions, env):
     """
     validate_form(expressions, 2, 3)
     if is_scheme_true(scheme_eval(expressions.first, env)):
-        return scheme_eval(expressions.rest.first, env)
+        return scheme_eval(expressions.rest.first, env, tail)
     elif len(expressions) == 3:
-        return scheme_eval(expressions.rest.rest.first, env)
+        return scheme_eval(expressions.rest.rest.first, env, tail)
 
-def do_and_form(expressions, env):
+def do_and_form(expressions, env, tail):
     """Evaluate a (short-circuited) and form.
 
     >>> env = create_global_frame()
@@ -133,13 +133,14 @@ def do_and_form(expressions, env):
     if expressions == nil:
         return True
     if expressions.rest == nil:
-        return scheme_eval(expressions.first, env)
-    elif is_scheme_true(scheme_eval(expressions.first, env)):
-        return do_and_form(expressions.rest, env)
-    return scheme_eval(expressions.first, env)
+        return scheme_eval(expressions.first, env, tail)
+    val = scheme_eval(expressions.first, env)
+    if is_scheme_true(val):
+        return do_and_form(expressions.rest, env, tail)
+    return val
     # END PROBLEM 12
 
-def do_or_form(expressions, env):
+def do_or_form(expressions, env, tail):
     """Evaluate a (short-circuited) or form.
 
     >>> env = create_global_frame()
@@ -159,13 +160,14 @@ def do_or_form(expressions, env):
     if expressions == nil:
         return False
     if expressions.rest == nil:
-        return scheme_eval(expressions.first, env)
-    elif is_scheme_false(scheme_eval(expressions.first, env)):
-        return do_or_form(expressions.rest, env)
-    return scheme_eval(expressions.first, env)
+        return scheme_eval(expressions.first, env, tail)
+    val = scheme_eval(expressions.first, env)
+    if is_scheme_false(val):
+        return do_or_form(expressions.rest, env, tail)
+    return val
     # END PROBLEM 12
 
-def do_cond_form(expressions, env):
+def do_cond_form(expressions, env, tail):
     """Evaluate a cond form.
 
     >>> do_cond_form(read_line("((#f (print 2)) (#t 3))"), create_global_frame())
@@ -187,13 +189,13 @@ def do_cond_form(expressions, env):
                 return True
             if clause.rest == nil:
                 return test
-            return eval_all(clause.rest, env)
+            return eval_all(clause.rest, env, tail)
         if expressions.rest == nil:
             return
             # END PROBLEM 13
         expressions = expressions.rest
 
-def do_let_form(expressions, env):
+def do_let_form(expressions, env, tail):
     """Evaluate a let form.
 
     >>> env = create_global_frame()
@@ -202,7 +204,7 @@ def do_let_form(expressions, env):
     """
     validate_form(expressions, 2)
     let_env = make_let_frame(expressions.first, env)
-    return eval_all(expressions.rest, let_env)
+    return eval_all(expressions.rest, let_env, tail)
 
 def make_let_frame(bindings, env):
     """Create a child frame of Frame ENV that contains the definitions given in
@@ -227,7 +229,7 @@ def make_let_frame(bindings, env):
 
 
 
-def do_quasiquote_form(expressions, env):
+def do_quasiquote_form(expressions, env, tail=False):
     """Evaluate a quasiquote form with parameters EXPRESSIONS in
     Frame ENV."""
     def quasiquote_item(val, env, level):
@@ -249,7 +251,7 @@ def do_quasiquote_form(expressions, env):
     validate_form(expressions, 1, 1)
     return quasiquote_item(expressions.first, env, 1)
 
-def do_unquote(expressions, env):
+def do_unquote(expressions, env, tail = False):
     raise SchemeError('unquote outside of quasiquote')
 
 
@@ -257,7 +259,7 @@ def do_unquote(expressions, env):
 # Dynamic Scope #
 #################
 
-def do_mu_form(expressions, env):
+def do_mu_form(expressions, env, tail = False):
     """Evaluate a mu form."""
     validate_form(expressions, 2)
     formals = expressions.first
