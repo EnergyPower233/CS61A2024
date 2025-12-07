@@ -133,10 +133,10 @@ def do_and_form(expressions, env, tail):
     if expressions == nil:
         return True
     if expressions.rest == nil:
-        return scheme_eval(expressions.first, env, tail)
+        return scheme_eval(expressions.first, env, tail=True)
     val = scheme_eval(expressions.first, env)
     if is_scheme_true(val):
-        return do_and_form(expressions.rest, env, tail)
+        return do_and_form(expressions.rest, env, tail=True)
     return val
     # END PROBLEM 12
 
@@ -160,10 +160,10 @@ def do_or_form(expressions, env, tail):
     if expressions == nil:
         return False
     if expressions.rest == nil:
-        return scheme_eval(expressions.first, env, tail)
+        return scheme_eval(expressions.first, env, tail=True)
     val = scheme_eval(expressions.first, env)
     if is_scheme_false(val):
-        return do_or_form(expressions.rest, env, tail)
+        return do_or_form(expressions.rest, env, tail=True)
     return val
     # END PROBLEM 12
 
