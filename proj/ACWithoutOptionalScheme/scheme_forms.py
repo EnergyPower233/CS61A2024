@@ -109,9 +109,9 @@ def do_if_form(expressions, env, tail):
     """
     validate_form(expressions, 2, 3)
     if is_scheme_true(scheme_eval(expressions.first, env)):
-        return scheme_eval(expressions.rest.first, env, tail)
+        return scheme_eval(expressions.rest.first, env, tail=True)
     elif len(expressions) == 3:
-        return scheme_eval(expressions.rest.rest.first, env, tail)
+        return scheme_eval(expressions.rest.rest.first, env, tail=True)
 
 def do_and_form(expressions, env, tail):
     """Evaluate a (short-circuited) and form.
