@@ -105,12 +105,10 @@ def eval_all(expressions, env, tail=False):
     def evaluate_all(expressions, env, tail=False):
         if expressions is nil:
             return
-        if expressions.rest == nil:
-            return scheme_eval(expressions.first, env, tail)
-        else:
+        while expressions.rest is not nil:
             scheme_eval(expressions.first, env)
-            return evaluate_all(expressions.rest, env, tail)
-    return evaluate_all(expressions, env, tail) # replace this with lines of your own code
+            expressions = expressions.rest
+        return scheme_eval(expressions.first, env, tail=True)
     # END PROBLEM 6
 
 
