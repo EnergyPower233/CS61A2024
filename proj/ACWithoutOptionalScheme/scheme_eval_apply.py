@@ -144,7 +144,8 @@ def optimize_tail_calls(unoptimized_scheme_eval):
         if tail and not scheme_symbolp(expr) and not self_evaluating(expr):
             return Unevaluated(expr, env)
 
-        result = unoptimized_scheme_eval(expr, env)
+        # result = unoptimized_scheme_eval(expr, env)
+        result = Unevaluated(expr, env)
         while isinstance(result, Unevaluated):
             result = unoptimized_scheme_eval(result.expr, result.env)
         return result
