@@ -37,41 +37,54 @@
 (define quoted? (check-special 'quote))
 (define let?    (check-special 'let))
 
-;; Converts all let special forms in EXPR into equivalent forms using lambda
+;;Converts all let special forms in EXPR into equivalent forms using lambda
 (define (let-to-lambda expr)
-  (cond ((atom? expr)
-         ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
-         ; END OPTIONAL PROBLEM 2
-         )
-        ((quoted? expr)
-         ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
-         ; END OPTIONAL PROBLEM 2
-         )
-        ((or (lambda? expr)
-             (define? expr))
-         (let ((form   (car expr))
-               (params (cadr expr))
-               (body   (cddr expr)))
-           ; BEGIN OPTIONAL PROBLEM 2
-           'replace-this-line
-           ; END OPTIONAL PROBLEM 2
-           ))
-        ((let? expr)
-         (let ((values (cadr expr))
-               (body   (cddr expr)))
-           ; BEGIN OPTIONAL PROBLEM 2
-           'replace-this-line
-           ; END OPTIONAL PROBLEM 2
-           ))
-        (else
-         ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
-         ; END OPTIONAL PROBLEM 2
-         )))
+  (cond 
+    ((atom? expr)
+     ; BEGIN OPTIONAL PROBLEM 2
+     expr
+     ; END OPTIONAL PROBLEM 2
+    )
+    ((quoted? expr)
+     ; BEGIN OPTIONAL PROBLEM 2
+     expr
+     ; END OPTIONAL PROBLEM 2
+    )
+    ((or (lambda? expr) (define? expr))
+     (let ((form (car expr))
+           (params (cadr expr))
+           (body (cddr expr)))
+       ; BEGIN OPTIONAL PROBLEM 2
+       (cons form (cons params (let-to-lambda body)))
+       ; END OPTIONAL PROBLEM 2
+     ))
+    ((let? expr)
+     (let ((values (cadr expr))
+           (body (cddr expr)))
+       ; BEGIN OPTIONAL PROBLEM 2
+       (if (atom? values)
+           expr
+           (let ((name (car (zip values)))
+                 (args (cadr (zip values))))
+             (cons
+              (cons 'lambda (cons name (let-to-lambda body)))
+              (let-to-lambda args))))
+       ; END OPTIONAL PROBLEM 2
+     ))
+    (else
+     ; BEGIN OPTIONAL PROBLEM 2
+     (if (null? expr)
+         expr
+         (cons (let-to-lambda (car expr))
+               (let-to-lambda (cdr expr))))
+     ; END OPTIONAL PROBLEM 2
+    )))
 
 ; Some utility functions that you may find useful to implement for let-to-lambda
-
 (define (zip pairs)
-  'replace-this-line)
+  (if (null? pairs)
+      (cons nil (cons nil nil))
+      (cons (cons (caar pairs) (car (zip (cdr pairs))))
+            (cons
+             (cons (car (cdar pairs)) (cadr (zip (cdr pairs))))
+             nil))))
